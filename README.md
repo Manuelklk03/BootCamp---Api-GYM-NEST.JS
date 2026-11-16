@@ -33,7 +33,7 @@ npm run build
 ```
 
 En PowerShell, si la política de ejecución bloquea `npm.ps1`, usa `npm.cmd` en los comandos anteriores.
-El workflow `.github/workflows/ci.yml` ejecuta los checks `htmlhint` y `lint` en cada PR hacia `main` y en cada push a `main`.
+El workflow `.github/workflows/ci.yml` ejecuta los checks `htmlhint` y `lint` en cada PR (también entre ramas `feature/`) y en cada push a `main`.
 
 Los tests automatizados sustituyen el `Pool` por un doble de prueba: comprueban la respuesta de salud, el error genérico, la recuperación y el manejo de errores de conexiones inactivas. Para comprobar PostgreSQL real, con la API arrancada:
 
@@ -47,6 +47,17 @@ curl.exe -i http://localhost:3000/api/health
 ```
 
 Se esperan `200`, 7 clases y 14 reservas, `500` con PostgreSQL parado y `200` tras volver a arrancarlo.
+
+## Rutas de lectura implementadas
+
+| Petición | Comportamiento |
+|---|---|
+| `GET /api/plans` | Planes por precio ascendente; `monthlyPrice` es numérico. |
+| `GET /api/classes` | Clases por fecha, con `trainerName`. |
+| `GET /api/classes?activity=yoga` | Coincidencia parcial sin distinguir mayúsculas, mediante `ILIKE` y `$1`. |
+| `GET /api/classes/:id` | Una clase; `400` si el id no es entero y `404` si no existe. |
+
+Los tests de lectura comprueban las respuestas HTTP con filas simuladas y verifican la parametrización y ordenación de las consultas. Las tablas de pruebas contra PostgreSQL real y el experimento manual de inyección siguen pendientes de disponer de Docker.
 
 El enunciado original continúa a continuación.
 
