@@ -1,5 +1,28 @@
 # Entrega: API del gimnasio FitVal con NestJS y PostgreSQL
 
+## Puesta en marcha del proyecto
+
+Requisitos: Node.js 24 y npm. El proyecto se instala en la raíz de este repositorio.
+
+```bash
+npm ci
+npm run start:dev
+```
+
+Comprobaciones locales:
+
+```bash
+npm run lint
+npm test -- --runInBand
+npm run test:e2e -- --runInBand
+npm run build
+```
+
+En PowerShell, si la política de ejecución bloquea `npm.ps1`, usa `npm.cmd` en los comandos anteriores.
+El workflow `.github/workflows/ci.yml` ejecuta los checks `htmlhint` y `lint` en cada PR hacia `main` y en cada push a `main`.
+
+El enunciado original continúa a continuación.
+
 ## Objetivo
 
 En la entrega de SQL diseñaste la base de datos del gimnasio **FitVal** y la consultabas a mano. Ahora vas a construir la **API** que usaría la web del gimnasio: un servidor **NestJS** que lee y escribe en esa base de datos, con **registro, login y permisos**.
