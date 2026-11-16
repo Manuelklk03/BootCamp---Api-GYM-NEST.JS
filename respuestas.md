@@ -27,3 +27,11 @@ WHERE c.activity ILIKE '%zzz' OR 1=1 --%' ORDER BY c.starts_at
 ```
 
 Con `$1`, todo el texto se trata como un valor de búsqueda y no modifica la consulta. El test automatizado comprueba esa separación; los recuentos del experimento real siguen pendientes de PostgreSQL, por lo que estos números son los resultados esperados, no mediciones realizadas.
+
+## Pregunta 3: comprobar el monitor en la API
+
+Comprobamos que existe para responder `400` con un mensaje que explique qué campo del body está mal. Sin esa comprobación, el error de clave ajena sin tratar acabaría en un `500` genérico, como si fuera un fallo interno.
+
+## Pregunta 4: borrar una clase con reservas
+
+Es `409` porque la petición está bien formada, pero entra en conflicto con el estado actual de la clase: tiene reservas. Un `400` indicaría que los datos de la petición son incorrectos.
