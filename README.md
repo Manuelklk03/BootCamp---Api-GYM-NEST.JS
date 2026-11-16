@@ -33,7 +33,7 @@ npm run build
 ```
 
 En PowerShell, si la política de ejecución bloquea `npm.ps1`, usa `npm.cmd` en los comandos anteriores.
-El workflow `.github/workflows/ci.yml` ejecuta los checks `htmlhint` y `lint` en cada PR (también entre ramas `feature/`) y en cada push a `main`.
+El workflow `.github/workflows/ci.yml` ejecuta los checks `htmlhint` y `lint` en cada PR dirigida a `main` y en cada push a `main`.
 
 Los tests automatizados sustituyen el `Pool` por un doble de prueba: comprueban la respuesta de salud, el error genérico, la recuperación y el manejo de errores de conexiones inactivas. Para comprobar PostgreSQL real, con la API arrancada:
 
