@@ -2,12 +2,26 @@
 
 ## Puesta en marcha del proyecto
 
-Requisitos: Node.js 24 y npm. El proyecto se instala en la raíz de este repositorio.
+Requisitos: Node.js 24, npm y Docker con Compose para PostgreSQL 17. El proyecto se instala en la raíz de este repositorio.
 
-```bash
+En una instalación nueva, copia `.env.example` a `.env` y cambia `CAMBIAME` por la contraseña de desarrollo indicada en `compose.yaml`. `.env` queda excluido de Git.
+
+FitVal usa el puerto local **5434**: el 5433 ya está ocupado por otro PostgreSQL en este equipo. El contenedor sigue escuchando en el 5432; `.env.example` y `compose.yaml` usan el mismo puerto local.
+
+Arranque desde PowerShell:
+
+```powershell
 npm ci
+Copy-Item .env.example .env
+# Edita .env y sustituye CAMBIAME por la contraseña de compose.yaml.
+docker compose up -d
+Get-Content -Encoding utf8 database/schema.sql | docker exec -i postgres-fitval psql -v ON_ERROR_STOP=1 -U alumno -d fitval
 npm run start:dev
 ```
+
+Antes de arrancar la API, edita la contraseña en `.env`. `schema.sql` recrea las tablas y los datos de prueba de la entrega; ejecútalo solo sobre esta base de datos.
+
+`GET http://localhost:3000/api/health` debe responder `200` con `{ "status": "ok", "database": "fitval" }`. Si PostgreSQL no está disponible, responde `500` con un mensaje genérico y registra el detalle en la terminal.
 
 Comprobaciones locales:
 
@@ -20,6 +34,19 @@ npm run build
 
 En PowerShell, si la política de ejecución bloquea `npm.ps1`, usa `npm.cmd` en los comandos anteriores.
 El workflow `.github/workflows/ci.yml` ejecuta los checks `htmlhint` y `lint` en cada PR hacia `main` y en cada push a `main`.
+
+Los tests automatizados sustituyen el `Pool` por un doble de prueba: comprueban la respuesta de salud, el error genérico, la recuperación y el manejo de errores de conexiones inactivas. Para comprobar PostgreSQL real, con la API arrancada:
+
+```powershell
+curl.exe -i http://localhost:3000/api/health
+docker exec postgres-fitval psql -U alumno -d fitval -c "SELECT COUNT(*) FROM classes;" -c "SELECT COUNT(*) FROM bookings;"
+docker compose stop
+curl.exe -i http://localhost:3000/api/health
+docker compose start
+curl.exe -i http://localhost:3000/api/health
+```
+
+Se esperan `200`, 7 clases y 14 reservas, `500` con PostgreSQL parado y `200` tras volver a arrancarlo.
 
 El enunciado original continúa a continuación.
 
