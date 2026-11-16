@@ -59,6 +59,29 @@ Se esperan `200`, 7 clases y 14 reservas, `500` con PostgreSQL parado y `200` tr
 
 Los tests de lectura comprueban las respuestas HTTP con filas simuladas y verifican la parametrización y ordenación de las consultas. Las tablas de pruebas contra PostgreSQL real y el experimento manual de inyección siguen pendientes de disponer de Docker.
 
+## Creación y borrado implementados
+
+| Petición | Comportamiento |
+|---|---|
+| `POST /api/classes` | Valida el DTO, recorta `activity` y `room`, comprueba el monitor y devuelve `201` con la clase completa. |
+| `DELETE /api/classes/:id` | Devuelve `200` con la clase borrada, `404` si no existe o `409` si tiene reservas. Un id no entero devuelve `400`. |
+
+Body de creación:
+
+```json
+{
+  "activity": "Fuerza",
+  "room": "Sala 3",
+  "startsAt": "2026-11-10T18:00:00Z",
+  "spots": 15,
+  "trainerId": 4
+}
+```
+
+La validación rechaza campos desconocidos, textos vacíos o demasiado largos, fechas inválidas y números que no sean enteros positivos. Un monitor inexistente devuelve `400`.
+
+Los tests de escritura usan un Pool simulado; la tabla de pruebas con PostgreSQL real queda pendiente. Las rutas siguen abiertas, tal como pide la parte 3. Registro, login, JWT, guards y roles (partes 4 y 5) quedan sin implementar.
+
 El enunciado original continúa a continuación.
 
 ## Objetivo
