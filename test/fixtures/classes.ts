@@ -1,0 +1,60 @@
+import { GymClassRow } from '../../src/classes/gym-class';
+
+export const classRows: GymClassRow[] = [
+  {
+    id: 1,
+    activity: 'Spinning',
+    room: 'Sala 1',
+    starts_at: new Date('2026-11-02T09:00:00Z'),
+    spots: 12,
+    trainer_name: 'Carla Navarro',
+  },
+  {
+    id: 2,
+    activity: 'Yoga',
+    room: 'Sala 2',
+    starts_at: new Date('2026-11-02T18:00:00Z'),
+    spots: 10,
+    trainer_name: 'Javier Ortega',
+  },
+  {
+    id: 3,
+    activity: 'Pilates',
+    room: 'Sala 2',
+    starts_at: new Date('2026-11-03T10:00:00Z'),
+    spots: 8,
+    trainer_name: 'Elena Romero',
+  },
+  {
+    id: 4,
+    activity: 'Spinning',
+    room: 'Sala 1',
+    starts_at: new Date('2026-11-03T19:00:00Z'),
+    spots: 12,
+    trainer_name: 'Carla Navarro',
+  },
+  {
+    id: 5,
+    activity: 'Zumba',
+    room: 'Sala 3',
+    starts_at: new Date('2026-11-04T18:30:00Z'),
+    spots: 20,
+    trainer_name: 'Elena Romero',
+  },
+  {
+    id: 6,
+    activity: 'Yoga',
+    room: 'Sala 2',
+    starts_at: new Date('2026-11-05T09:30:00Z'),
+    spots: 10,
+    trainer_name: 'Javier Ortega',
+  },
+  {
+    id: 7,
+    activity: 'Crossfit',
+    room: 'Sala 3',
+    starts_at: new Date('2026-11-05T20:00:00Z'),
+    spots: 3,
+    trainer_name: 'Carla Navarro',
+  },
+];
