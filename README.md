@@ -80,7 +80,21 @@ Body de creación:
 
 La validación rechaza campos desconocidos, textos vacíos o demasiado largos, fechas inválidas y números que no sean enteros positivos. Un monitor inexistente devuelve `400`.
 
-Los tests de escritura usan un Pool simulado; la tabla de pruebas con PostgreSQL real queda pendiente. Las rutas siguen abiertas, tal como pide la parte 3. Registro, login, JWT, guards y roles (partes 4 y 5) quedan sin implementar.
+Los tests de escritura usan un Pool simulado; la tabla de pruebas con PostgreSQL real queda pendiente. Las rutas de escritura de clases siguen abiertas, tal como pide la parte 3. Login, JWT, guards y permisos de personal quedan pendientes para futuras PR.
+
+## Registro de usuarios implementado
+
+`POST /api/auth/register` recibe un correo válido y una contraseña de al menos 8 caracteres:
+
+```json
+{ "email": "ana@gym.com", "password": "12345678" }
+```
+
+Devuelve `201` con `id`, `email` y `role: "member"`, sin contraseña ni hash. Un correo ya registrado devuelve `409`; los datos inválidos y campos extra (incluido `role`) devuelven `400`. La contraseña se guarda como hash Argon2id y las consultas usan parámetros.
+
+`database/schema.sql` incluye ahora la tabla `users`. El esquema completo recrea los datos: no se ha ejecutado sobre ninguna base existente. Las pruebas automatizadas simulan el Pool y comprueban el hash con Argon2 real; queda pendiente probar el registro contra PostgreSQL real cuando Docker esté disponible.
+
+Esta PR solo inicia la parte 4. Login, emisión y validación de JWT, `/api/auth/me` y el guard de personal se harán en las siguientes PR.
 
 El enunciado original continúa a continuación.
 
