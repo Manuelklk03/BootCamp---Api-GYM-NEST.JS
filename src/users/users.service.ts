@@ -6,6 +6,14 @@ import { User } from './user';
 export class UsersService {
   constructor(private readonly pool: Pool) {}
 
+  async findById(id: number): Promise<Omit<User, 'password_hash'> | undefined> {
+    const result = await this.pool.query<Omit<User, 'password_hash'>>(
+      'SELECT id, email, role FROM users WHERE id = $1',
+      [id],
+    );
+    return result.rows[0];
+  }
+
   async findByEmail(email: string): Promise<User | undefined> {
     const result = await this.pool.query<User>(
       'SELECT id, email, password_hash, role FROM users WHERE email = $1',

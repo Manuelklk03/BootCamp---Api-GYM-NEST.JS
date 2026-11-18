@@ -13,7 +13,7 @@ Arranque desde PowerShell:
 ```powershell
 npm ci
 Copy-Item .env.example .env
-# Edita .env y sustituye CAMBIAME por la contraseña de compose.yaml.
+# En .env, configura la contraseña de PostgreSQL y un JWT_SECRET privado.
 docker compose up -d
 Get-Content -Encoding utf8 database/schema.sql | docker exec -i postgres-fitval psql -v ON_ERROR_STOP=1 -U alumno -d fitval
 npm run start:dev
@@ -94,7 +94,14 @@ Devuelve `201` con `id`, `email` y `role: "member"`, sin contraseña ni hash. Un
 
 `database/schema.sql` incluye ahora la tabla `users`. El esquema completo recrea los datos: no se ha ejecutado sobre ninguna base existente. Las pruebas automatizadas simulan el Pool y comprueban el hash con Argon2 real; queda pendiente probar el registro contra PostgreSQL real cuando Docker esté disponible.
 
-Esta PR solo inicia la parte 4. Login, emisión y validación de JWT, `/api/auth/me` y el guard de personal se harán en las siguientes PR.
+## Login y perfil
+
+| Petición | Comportamiento |
+|---|---|
+| `POST /api/auth/login` | Recibe `email` y `password`. Devuelve `200` con `accessToken` o el mismo `401` para credenciales incorrectas. |
+| `GET /api/auth/me` | Con `Authorization: Bearer <token>`, devuelve `200` con `id`, `email` y `role`. Devuelve `401` si falta el token, no es válido o el usuario ya no existe. |
+
+El JWT caduca en una hora. Para generar un valor de desarrollo para `JWT_SECRET`, ejecuta `node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"` y guarda el resultado en tu `.env` local.
 
 El enunciado original continúa a continuación.
 

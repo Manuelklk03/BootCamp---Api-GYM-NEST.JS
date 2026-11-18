@@ -35,3 +35,7 @@ Comprobamos que existe para responder `400` con un mensaje que explique qué cam
 ## Pregunta 4: borrar una clase con reservas
 
 Es `409` porque la petición está bien formada, pero entra en conflicto con el estado actual de la clase: tiene reservas. Un `400` indicaría que los datos de la petición son incorrectos.
+
+## Pregunta 5 — Contenido del JWT
+
+El token lleva el identificador del usuario en `sub` y las marcas de emisión y caducidad `iat` y `exp`. El rol se consulta en la base de datos para que los permisos reflejen los cambios aunque el token siga vigente.

@@ -1,11 +1,39 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import { UsersService } from '../users/users.service';
 import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
+import type { JwtPayload } from './jwt-payload';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly jwtService: JwtService,
+  ) {}
+
+  async login(dto: LoginDto) {
+    const user = await this.usersService.findByEmail(dto.email);
+    if (!user || !(await argon2.verify(user.password_hash, dto.password))) {
+      throw new UnauthorizedException('Correo o contraseña incorrectos');
+    }
+
+    const payload: JwtPayload = { sub: user.id };
+    return { accessToken: await this.jwtService.signAsync(payload) };
+  }
+
+  async me(id: number) {
+    const user = await this.usersService.findById(id);
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+    return user;
+  }
 
   async register(dto: RegisterDto) {
     const existing = await this.usersService.findByEmail(dto.email);
