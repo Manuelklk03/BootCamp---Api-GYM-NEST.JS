@@ -80,7 +80,7 @@ Body de creación:
 
 La validación rechaza campos desconocidos, textos vacíos o demasiado largos, fechas inválidas y números que no sean enteros positivos. Un monitor inexistente devuelve `400`.
 
-Los tests de escritura usan un Pool simulado; la tabla de pruebas con PostgreSQL real queda pendiente. Las rutas de escritura de clases siguen abiertas, tal como pide la parte 3. Login, JWT, guards y permisos de personal quedan pendientes para futuras PR.
+Los tests de escritura usan un Pool simulado. La tabla de pruebas con PostgreSQL real queda pendiente. Desde la parte 5, estas rutas requieren un token de un usuario con rol `staff`.
 
 ## Registro de usuarios implementado
 
@@ -102,6 +102,10 @@ Devuelve `201` con `id`, `email` y `role: "member"`, sin contraseña ni hash. Un
 | `GET /api/auth/me` | Con `Authorization: Bearer <token>`, devuelve `200` con `id`, `email` y `role`. Devuelve `401` si falta el token, no es válido o el usuario ya no existe. |
 
 El JWT caduca en una hora. Para generar un valor de desarrollo para `JWT_SECRET`, ejecuta `node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"` y guarda el resultado en tu `.env` local.
+
+## Permisos de personal
+
+Las rutas de lectura de clases son públicas. En `POST /api/classes` y `DELETE /api/classes/:id`, un token ausente o inválido devuelve `401` y un usuario con rol `member` recibe `403`. El guard consulta el rol en PostgreSQL en cada petición, así que un usuario que pasa a `staff` puede usar su token vigente para escribir.
 
 El enunciado original continúa a continuación.
 

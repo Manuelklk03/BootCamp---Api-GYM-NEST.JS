@@ -1,9 +1,11 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 import { Pool } from 'pg';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
+import { UsersService } from '../src/users/users.service';
 import { classRows } from './fixtures/classes';
 
 const createBody = {
@@ -48,6 +50,15 @@ const invalidBodies: Array<[string, Record<string, unknown>]> = [
 describe('Crear y borrar clases (Pool simulado)', () => {
   let app: INestApplication<App>;
   const query = jest.fn();
+  const receptionist = {
+    id: 2,
+    email: 'recepcion@fitval.com',
+    role: 'staff',
+  } as const;
+  let findById: jest.SpiedFunction<UsersService['findById']>;
+  let token: string;
+  const client = () =>
+    request.agent(app.getHttpServer()).set('Authorization', 'Bearer ' + token);
 
   beforeEach(async () => {
     query.mockReset();
@@ -65,10 +76,43 @@ describe('Crear y borrar clases (Pool simulado)', () => {
       }),
     );
     await app.init();
+    token = app.get(JwtService).sign({ sub: receptionist.id });
+    findById = jest
+      .spyOn(app.get(UsersService), 'findById')
+      .mockResolvedValue(receptionist);
   });
 
   afterEach(async () => {
     await app.close();
+  });
+
+  it('exige un token para escribir y mantiene p?blica la lectura', async () => {
+    query.mockResolvedValueOnce({ rows: classRows });
+    const anonymous = request(app.getHttpServer());
+    await anonymous.get('/api/classes').expect(200);
+    await anonymous.post('/api/classes').send(createBody).expect(401);
+    await anonymous.delete('/api/classes/6').expect(401);
+    expect(findById).not.toHaveBeenCalled();
+    expect(query).toHaveBeenCalledTimes(1);
+  });
+
+  it('consulta el rol vigente y permite el POST con el mismo token al pasar a staff', async () => {
+    findById.mockResolvedValue({ ...receptionist, role: 'member' });
+    await client().post('/api/classes').send(createBody).expect(403);
+    await client().delete('/api/classes/6').expect(403);
+    expect(query).not.toHaveBeenCalled();
+
+    findById.mockResolvedValue(receptionist);
+    query
+      .mockResolvedValueOnce({ rows: [{ id: 4 }] })
+      .mockResolvedValueOnce({ rows: [{ id: 8 }] })
+      .mockResolvedValueOnce({ rows: [createdRow] });
+    await client()
+      .post('/api/classes')
+      .send(createBody)
+      .expect(201, createdClass);
+    expect(findById).toHaveBeenCalledTimes(3);
+    expect(findById).toHaveBeenLastCalledWith(receptionist.id);
   });
 
   it('POST crea una clase, recorta los textos y devuelve el monitor', async () => {
@@ -77,7 +121,7 @@ describe('Crear y borrar clases (Pool simulado)', () => {
       .mockResolvedValueOnce({ rows: [{ id: 8 }] })
       .mockResolvedValueOnce({ rows: [createdRow] });
 
-    await request(app.getHttpServer())
+    await client()
       .post('/api/classes')
       .send({ ...createBody, activity: '  Fuerza  ', room: ' Sala 3 ' })
       .expect(201)
@@ -90,16 +134,13 @@ describe('Crear y borrar clases (Pool simulado)', () => {
   });
 
   it.each(invalidBodies)('POST devuelve 400: %s', async (_name, body) => {
-    await request(app.getHttpServer())
-      .post('/api/classes')
-      .send(body)
-      .expect(400);
+    await client().post('/api/classes').send(body).expect(400);
     expect(query).not.toHaveBeenCalled();
   });
 
   it('POST devuelve 400 si no existe el monitor y no inserta la clase', async () => {
     query.mockResolvedValue({ rows: [] });
-    await request(app.getHttpServer())
+    await client()
       .post('/api/classes')
       .send({ ...createBody, trainerId: 99 })
       .expect(400);
@@ -117,11 +158,8 @@ describe('Crear y borrar clases (Pool simulado)', () => {
       .mockResolvedValueOnce({ rows: [{ id: 8 }] })
       .mockResolvedValueOnce({ rows: [] });
 
-    await request(app.getHttpServer())
-      .delete('/api/classes/8')
-      .expect(200)
-      .expect(createdClass);
-    await request(app.getHttpServer()).delete('/api/classes/8').expect(404);
+    await client().delete('/api/classes/8').expect(200).expect(createdClass);
+    await client().delete('/api/classes/8').expect(404);
     expect(query).toHaveBeenCalledWith(
       'DELETE FROM classes WHERE id = $1 RETURNING id',
       [8],
@@ -132,7 +170,7 @@ describe('Crear y borrar clases (Pool simulado)', () => {
     query
       .mockResolvedValueOnce({ rows: [classRows[0]] })
       .mockResolvedValueOnce({ rows: [{ total: 3 }] });
-    await request(app.getHttpServer()).delete('/api/classes/1').expect(409);
+    await client().delete('/api/classes/1').expect(409);
     expect(query).toHaveBeenCalledTimes(2);
     expect(query).not.toHaveBeenCalledWith(
       expect.stringContaining('DELETE'),
@@ -142,11 +180,11 @@ describe('Crear y borrar clases (Pool simulado)', () => {
 
   it('DELETE devuelve 404 si la clase no existe', async () => {
     query.mockResolvedValue({ rows: [] });
-    await request(app.getHttpServer()).delete('/api/classes/99').expect(404);
+    await client().delete('/api/classes/99').expect(404);
   });
 
   it('DELETE rechaza un id no numérico antes de consultar PostgreSQL', async () => {
-    await request(app.getHttpServer()).delete('/api/classes/abc').expect(400);
+    await client().delete('/api/classes/abc').expect(400);
     expect(query).not.toHaveBeenCalled();
   });
 });

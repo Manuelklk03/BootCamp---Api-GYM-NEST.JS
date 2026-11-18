@@ -39,3 +39,7 @@ Es `409` porque la petición está bien formada, pero entra en conflicto con el 
 ## Pregunta 5 — Contenido del JWT
 
 El token lleva el identificador del usuario en `sub` y las marcas de emisión y caducidad `iat` y `exp`. El rol se consulta en la base de datos para que los permisos reflejen los cambios aunque el token siga vigente.
+
+## Pregunta 6 — Cambio de rol
+
+El guard identifica a recepción por `sub` y lee su rol en cada petición, así que la promoción se aplica al usar el mismo token. Si el guard leyera el rol del JWT, el token anterior seguiría indicando `member` y haría falta iniciar sesión para obtener uno con el nuevo rol.
